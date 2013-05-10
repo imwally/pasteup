@@ -10,8 +10,8 @@ import (
 )
 
 const url string = "https://api.github.com/gists"
-
 var files = make(map[string]map[string]string)
+var content []byte
 
 type GistResponse struct {
 	Url     string `json:"url"`
@@ -24,42 +24,42 @@ type Gist struct {
 	Files       map[string]map[string]string
 }
 
-func CreateFilesMap(f []string) map[string]map[string]string {
+func CreateFilesMap(f []string) (files map[string]map[string]string, err error) {
 	for _, file := range f {
-		filename := path.Base(file)
-		content, err := ioutil.ReadFile(file)
+		content, err = ioutil.ReadFile(file)
 		if err != nil {
-			log.Println(err)
+			return 
 		}
+		filename := path.Base(file)
 		files[filename] = map[string]string{"content": string(content)}
 	}
-	return files
+	return
 }
 
 func CreateJson(d string, p bool, f map[string]map[string]string) string {
 	gistJson := Gist{d, p, f}
 	g, err := json.Marshal(gistJson)
 	if err != nil {
-		log.Println("error: ", err)
+		log.Println(err)
 	}
 	return strings.ToLower(string(g))
 }
 
-func PostGist(gist string) GistResponse {
+func PostGist(gist string) string {
 	r := strings.NewReader(gist)
 	resp, err := http.Post(url, "application/json", r)
 	if err != nil {
-		log.Println("error: ", err)
+		log.Println(err)
 	}
 	postResp, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("error ", err)
+		log.Println(err)
 	}
 	resp.Body.Close()
-	var g GistResponse
-	err = json.Unmarshal(postResp, &g)
+	//var g GistResponse
+	//err = json.Unmarshal(postResp, &g)
 	if err != nil {
-		log.Println("error ", err)
+		log.Println(err)
 	}
-	return g
+	return string(postResp) 
 }

@@ -3,31 +3,42 @@ package main
 import (
 	"fmt"
 	"github.com/imwally/pasteup/gist"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"time"
 )
 
-var dateStamp string = time.Now().Format("20060102150530")
-var fileName string = "paste_" + dateStamp + ".txt"
-var tempDir string = os.TempDir()
-var files = make(map[string]map[string]string)
+var paste string
+var files map[string]map[string]string
+var json string 
 
-func newPaste(fileName string) {
-	cmd := exec.Command("vi", "+star", fileName)
+func newPaste() (name string, err error) {
+	
+	tempFile, err := ioutil.TempFile("", "paste_")
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		return
+	}
+	
+	cmd := exec.Command("vi", "+star", tempFile.Name())
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
-		log.Printf("2")
+		log.Printf("Error: %v\n", err)
 		log.Fatal(err)
+		return
 	}
+	
 	err = cmd.Wait()
 	if err != nil {
-		log.Printf("Error creating new paste. Error: %v\n", err)
+		log.Printf("Error: %v\n", err)
+		return
 	}
+
+	return
 }
 
 func main() {
@@ -35,15 +46,25 @@ func main() {
 	args := os.Args[1:]
 
 	if len(args) < 1 {
-		pasteFile := tempDir + fileName
-		newPaste(pasteFile)
-		files = gist.CreateFilesMap([]string{pasteFile})
+		paste, err := newPaste()
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		files, err := gist.CreateFilesMap([]string{paste})
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		json = gist.CreateJson("", false, files)
 	} else {
-		files = gist.CreateFilesMap(args)
+		files, err := gist.CreateFilesMap(args)
+		if err != nil {
+			log.Printf("%v", err)
+		} else {
+			json = gist.CreateJson("", false, files)
+		}	
 	}
 
-	json := gist.CreateJson("", false, files)
-	r := gist.PostGist(json)
-	fmt.Println(r.HtmlUrl)
+	fmt.Println(json)
+	os.Remove(paste)
 
 }
