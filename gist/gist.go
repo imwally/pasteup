@@ -10,6 +10,7 @@ import (
 )
 
 const url string = "https://api.github.com/gists"
+
 var files = make(map[string]map[string]string)
 
 type GistResponse struct {
@@ -18,8 +19,8 @@ type GistResponse struct {
 }
 
 type Gist struct {
-	Description string	`json:"description"`
-	Public      bool		`json:"public"`
+	Description string                       `json:"description"`
+	Public      bool                         `json:"public"`
 	Files       map[string]map[string]string `json:"files"`
 }
 
@@ -58,5 +59,5 @@ func PostGist(gist string) GistResponse {
 	if err != nil {
 		log.Println(err)
 	}
-	return g 
+	return g
 }

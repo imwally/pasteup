@@ -8,8 +8,8 @@ import (
 	"os/exec"
 )
 
-var resp gist.GistResponse 
-var json string 
+var resp gist.GistResponse
+var json string
 var files map[string]map[string]string
 
 func newPaste() (name string, err error) {
@@ -18,7 +18,7 @@ func newPaste() (name string, err error) {
 		fmt.Printf("Error: %v\n", err)
 		return
 	}
-	name = tempf.Name()	
+	name = tempf.Name()
 	cmd := exec.Command("vi", "+star", name)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -59,6 +59,6 @@ func main() {
 			json = gist.CreateJson("", false, files)
 			resp = gist.PostGist(json)
 			fmt.Println(resp.HtmlUrl)
-		}	
+		}
 	}
 }
